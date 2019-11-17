@@ -1,5 +1,5 @@
-Image classifier for cats vs. dogs based on the CIFAR-10 database!
+Image classifier for birds, cats, and dogs based on the CIFAR-10 database!
 
-Use CNN model for this experimental project.
+Use python CNN model for this project.
 
 
