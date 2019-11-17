@@ -88,7 +88,9 @@ def train(model, train_inputs, train_labels):
 	pass
 
 def test(model, test_inputs, test_labels):
-	pass
+	log = model.call(test_inputs, is_testing=True)
+	acc = model.accuracy(log, test_labels)
+	return acc
 
 
 
