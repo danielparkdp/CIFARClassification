@@ -38,7 +38,41 @@ class Model(tf.keras.Model):
 
 
 	def call(self, inputs, is_testing=False):
-		pass
+		conv1_layer = tf.nn.conv2d(inputs, self.conv_1_filter, [1,2,2,1], "SAME")
+		conv1_out = tf.nn.bias_add(conv1_layer, self.conv_1_bias)
+		m, v = tf.nn.moments(conv1_out, [0])
+		conv1_norm = tf.nn.batch_normalization(conv1_out, m, v, None, None, 0.001)
+		conv1 = tf.nn.relu(conv1_norm)
+
+		max_pool1 = tf.nn.max_pool(conv1, [3,3], [1,2,2,1], "SAME")
+
+		conv2_layer = tf.nn.conv2d(max_pool1, self.conv_2_filter, [1,1,1,1], "SAME")
+		conv2_out = tf.nn.bias_add(conv2_layer, self.conv_2_bias)
+		m, v = tf.nn.moments(conv2_out, [0])
+		conv2_norm = tf.nn.batch_normalization(conv2_out, m, v, None, None, 0.001)
+		conv2 = tf.nn.relu(conv2_norm)
+
+		max_pool2 = tf.nn.max_pool(conv2, [2,2], [1,2,2,1], "SAME")
+
+		if is_testing:
+			conv3_layer = conv2d(max_pool2, self.conv_3_filter, [1,1,1,1], "SAME")
+		else:
+			conv3_layer = tf.nn.conv2d(max_pool2, self.conv_3_filter, [1,1,1,1], "SAME")
+		conv3_out = tf.nn.bias_add(conv3_layer, self.conv_3_bias)
+		m, v = tf.nn.moments(conv3_out, [0])
+		conv3_norm = tf.nn.batch_normalization(conv3_out, m, v, None, None, 0.001)
+		conv3 = tf.nn.relu(conv3_norm)
+
+		input_size = conv3.get_shape().as_list()
+		size2 = input_size[-1]*input_size[-2]*input_size[-3]
+		result = tf.reshape(conv3, [-1, size2])
+
+		result1 = tf.matmul(result, self.dense_w_1)+self.dense_b_1
+		result1 = tf.nn.dropout(result1, 0.3)
+		result2 = tf.matmul(result1, self.dense_w_2)+self.dense_b_2
+		result2 = tf.nn.dropout(result2, 0.3)
+		result3 = tf.matmul(result2, self.dense_w_3)+self.dense_b_3
+		return result3
 
 	def loss(self, logits, labels):
 		losses = tf.nn.softmax_cross_entropy_with_logits(labels, logits)
