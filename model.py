@@ -85,7 +85,24 @@ class Model(tf.keras.Model):
 
 
 def train(model, train_inputs, train_labels):
-	pass
+	num_rows = len(train_inputs)
+	r = range(0,num_rows)
+	r = tf.random.shuffle(r)
+	inp = tf.gather(train_inputs, r)
+	lab = tf.gather(train_labels, r)
+	i = model.batch_size
+
+	while i <= num_rows:
+		curr = inp[(i-model.batch_size):i]
+		currlab = lab[(i-model.batch_size):i]
+		curr = tf.image.random_flip_left_right(curr)
+		with tf.GradientTape() as tape:
+			log = model.call(curr)
+			loss = model.loss(log, currlab)
+
+		gradients = tape.gradient(loss, model.trainable_variables)
+		model.optimizer.apply_gradients(zip(gradients, model.trainable_variables))
+		i+=model.batch_size
 
 def test(model, test_inputs, test_labels):
 	log = model.call(test_inputs, is_testing=True)
@@ -96,7 +113,15 @@ def test(model, test_inputs, test_labels):
 
 
 def main():
-	pass
+	# store data in folder called data
+	train_inp, train_lab = get_data("data/train", 3, 5)
+	test_inp, test_lab = get_data("data/test", 3, 5)
+	mod = Model()
+	for i in range(0,mod.epochs):
+		train(mod, train_inp, train_lab)
+	acc = test(mod, test_inp, test_lab)
+	print(acc)
+	return
 
 
 if __name__ == '__main__':
